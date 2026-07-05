@@ -1,8 +1,12 @@
 package code.practice.URLShorten.model;
 
+import org.springframework.data.annotation.Id;
+import org.springframework.data.mongodb.core.mapping.Document;
 import java.time.LocalDateTime;
 
+@Document(collection = "url_metadata")
 public class UrlMetadata {
+    @Id
     private String shortKey;
     private String longUrl;
     private LocalDateTime createdAt;

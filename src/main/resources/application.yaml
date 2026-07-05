@@ -1,6 +1,9 @@
 spring:
   application:
     name: URLShorten
+  data:
+    mongodb:
+      uri: mongodb://localhost:27017/url_shortener
 
 server:
   port: 8081

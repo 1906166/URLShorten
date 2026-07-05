@@ -3,11 +3,11 @@ package code.practice.URLShorten.controller;
 import code.practice.URLShorten.model.RedirectResult;
 import code.practice.URLShorten.model.UrlMetadata;
 import code.practice.URLShorten.service.*;
+import code.practice.URLShorten.repository.UrlMetadataRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.servlet.view.RedirectView;
 
 import java.net.URI;
 import java.util.HashMap;
@@ -21,7 +21,7 @@ public class UrlShortenerApiController {
     private final ShortenService shortenService;
     private final RedirectService redirectService;
     private final RedisCacheService cacheService;
-    private final MockDatabaseService databaseService;
+    private final UrlMetadataRepository urlMetadataRepository;
     private final MockKafkaService kafkaService;
     private final AnalyticsService analyticsService;
 
@@ -29,13 +29,13 @@ public class UrlShortenerApiController {
     public UrlShortenerApiController(ShortenService shortenService,
                                      RedirectService redirectService,
                                      RedisCacheService cacheService,
-                                     MockDatabaseService databaseService,
+                                     UrlMetadataRepository urlMetadataRepository,
                                      MockKafkaService kafkaService,
                                      AnalyticsService analyticsService) {
         this.shortenService = shortenService;
         this.redirectService = redirectService;
         this.cacheService = cacheService;
-        this.databaseService = databaseService;
+        this.urlMetadataRepository = urlMetadataRepository;
         this.kafkaService = kafkaService;
         this.analyticsService = analyticsService;
     }
@@ -99,8 +99,8 @@ public class UrlShortenerApiController {
         
         // DB info
         Map<String, Object> dbInfo = new HashMap<>();
-        dbInfo.put("records", databaseService.findAll());
-        dbInfo.put("recordCount", databaseService.getRecordCount());
+        dbInfo.put("records", urlMetadataRepository.findAll());
+        dbInfo.put("recordCount", urlMetadataRepository.count());
         state.put("database", dbInfo);
         
         // Kafka event log
@@ -116,7 +116,7 @@ public class UrlShortenerApiController {
     @PostMapping("/api/system/clear")
     public ResponseEntity<?> clearSystem() {
         cacheService.clear();
-        databaseService.clear();
+        urlMetadataRepository.deleteAll();
         kafkaService.clear();
         analyticsService.clear();
         

@@ -3,6 +3,7 @@ package code.practice.URLShorten;
 import code.practice.URLShorten.model.RedirectResult;
 import code.practice.URLShorten.model.UrlMetadata;
 import code.practice.URLShorten.service.*;
+import code.practice.URLShorten.repository.UrlMetadataRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -22,7 +23,7 @@ class UrlShortenApplicationTests {
 	private RedisCacheService cacheService;
 
 	@Autowired
-	private MockDatabaseService databaseService;
+	private UrlMetadataRepository urlMetadataRepository;
 
 	@Autowired
 	private ShortenService shortenService;
@@ -34,7 +35,7 @@ class UrlShortenApplicationTests {
 	void setUp() {
 		// Reset states before each test run
 		cacheService.clear();
-		databaseService.clear();
+		urlMetadataRepository.deleteAll();
 	}
 
 	@Test
@@ -42,7 +43,7 @@ class UrlShortenApplicationTests {
 		// Basic context load test
 		assertNotNull(idGeneratorService);
 		assertNotNull(cacheService);
-		assertNotNull(databaseService);
+		assertNotNull(urlMetadataRepository);
 		assertNotNull(shortenService);
 		assertNotNull(redirectService);
 	}
@@ -62,11 +63,11 @@ class UrlShortenApplicationTests {
 	}
 
 	@Test
-	void testMockDatabaseStorage() {
+	void testMongoDatabaseStorage() {
 		UrlMetadata metadata = new UrlMetadata("testKey", "https://example.com", null, null);
-		databaseService.save(metadata);
+		urlMetadataRepository.save(metadata);
 		
-		Optional<UrlMetadata> retrieved = databaseService.findById("testKey");
+		Optional<UrlMetadata> retrieved = urlMetadataRepository.findById("testKey");
 		assertTrue(retrieved.isPresent());
 		assertEquals("https://example.com", retrieved.get().getLongUrl());
 	}
@@ -106,7 +107,7 @@ class UrlShortenApplicationTests {
 		assertEquals(longUrl, metadata.getLongUrl());
 		
 		// Verify persistence in DB
-		Optional<UrlMetadata> dbRecord = databaseService.findById(metadata.getShortKey());
+		Optional<UrlMetadata> dbRecord = urlMetadataRepository.findById(metadata.getShortKey());
 		assertTrue(dbRecord.isPresent());
 		assertEquals(longUrl, dbRecord.get().getLongUrl());
 	}
